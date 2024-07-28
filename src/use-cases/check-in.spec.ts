@@ -1,14 +1,27 @@
 import { expect, describe, it, beforeEach, afterEach, vi } from "vitest";
 import { CheckinUseCase } from "./check-in";
 import { InMemoryCheckinsRepository } from "@/repositories/in-memory/in-memory-checkins-repository";
+import { InMemoryGymsRepository } from "@/repositories/in-memory/in-memory-gyms-repository";
+import { Decimal } from "@prisma/client/runtime/library";
 
 let checkInsRepository: InMemoryCheckinsRepository;
+let gymsRepository: InMemoryGymsRepository;
 let sut: CheckinUseCase;
 
 describe("Check-in use case tests", () => {
   beforeEach(() => {
     checkInsRepository = new InMemoryCheckinsRepository();
-    sut = new CheckinUseCase(checkInsRepository);
+    gymsRepository = new InMemoryGymsRepository();
+    sut = new CheckinUseCase(checkInsRepository, gymsRepository);
+
+    gymsRepository.items.push({
+      id: "gym-01",
+      title: "Test Gym",
+      description: "",
+      phone: "",
+      latitude: new Decimal(0),
+      longitude: new Decimal(0),
+    });
 
     vi.useFakeTimers();
   });
@@ -21,6 +34,8 @@ describe("Check-in use case tests", () => {
     const { checkIn } = await sut.execute({
       gymId: "gym-01",
       userId: "user-01",
+      userLatitude: 0,
+      userLongitude: 0,
     });
 
     expect(checkIn.id).toEqual(expect.any(String));
@@ -32,12 +47,16 @@ describe("Check-in use case tests", () => {
     const { checkIn } = await sut.execute({
       gymId: "gym-01",
       userId: "user-01",
+      userLatitude: 0,
+      userLongitude: 0,
     });
 
     await expect(() => {
       return sut.execute({
         gymId: "gym-01",
         userId: "user-01",
+        userLatitude: 0,
+        userLongitude: 0,
       });
     }).rejects.toBeInstanceOf(Error);
   });
@@ -48,6 +67,8 @@ describe("Check-in use case tests", () => {
     await sut.execute({
       gymId: "gym-01",
       userId: "user-01",
+      userLatitude: 0,
+      userLongitude: 0,
     });
 
     vi.setSystemTime(new Date(2022, 0, 21, 8, 0, 0));
@@ -55,8 +76,30 @@ describe("Check-in use case tests", () => {
     const { checkIn } = await sut.execute({
       gymId: "gym-01",
       userId: "user-01",
+      userLatitude: 0,
+      userLongitude: 0,
     });
 
     expect(checkIn.id).toEqual(expect.any(String));
+  });
+
+  it("Should not be able to check in on distant gym", async () => {
+    gymsRepository.items.push({
+      id: "gym-02",
+      title: "Test Gym",
+      description: "",
+      phone: "",
+      latitude: new Decimal(-16.1966239),
+      longitude: new Decimal(-47.9255421),
+    });
+
+    await expect(() => {
+      return sut.execute({
+        gymId: "gym-02",
+        userId: "user-01",
+        userLatitude: -16.2522523,
+        userLongitude: -47.9147274,
+      });
+    }).rejects.toBeInstanceOf(Error);
   });
 });
