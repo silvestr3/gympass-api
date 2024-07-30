@@ -22,10 +22,10 @@ describe("Get user metrics use case tests", () => {
       user_id: "user-01",
     });
 
-    const { checkIns } = await sut.execute({
+    const { checkInsCount } = await sut.execute({
       userId: "user-01",
     });
 
-    expect(checkIns).toBe(2);
+    expect(checkInsCount).toBe(2);
   });
 });
