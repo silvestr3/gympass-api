@@ -6,7 +6,7 @@ interface GetUserMetricsUseCaseParams {
 }
 
 interface GetUserMetricsUseCaseResponse {
-  checkIns: number;
+  checkInsCount: number;
 }
 
 export class GetUserMetricsUseCase {
@@ -15,8 +15,8 @@ export class GetUserMetricsUseCase {
   async execute({
     userId,
   }: GetUserMetricsUseCaseParams): Promise<GetUserMetricsUseCaseResponse> {
-    const checkIns = await this.checkInsRepository.countByUserId(userId);
+    const checkInsCount = await this.checkInsRepository.countByUserId(userId);
 
-    return { checkIns };
+    return { checkInsCount };
   }
 }
